@@ -1,9 +1,24 @@
 #pragma once
 
-class statistic {
+#include <vector>
+#include <ctime>
+#include <map>
+class Statistic {
 public:
-    statistic(int xx = 10);
+    Statistic(int count = 0);
+
+    Statistic(int count, time_t seed);
+
+    void setSeed(time_t seed);
+
+    void setCount(int count);
+
+    void addEvent(double event);
+
+    std::vector<double> getEventsList() const;
 
 private:
-    int x;
+    std::map<double, int> m_events;
+    time_t                m_seed;
+    int                   m_count;
 };
