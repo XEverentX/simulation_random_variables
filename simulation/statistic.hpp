@@ -3,21 +3,27 @@
 #include <vector>
 #include <ctime>
 #include <map>
-class Statistic {
+class Statistic final
+{
 public:
     Statistic(int count = 0);
 
     Statistic(int count, time_t seed);
 
-    void setSeed(time_t seed);
+    Statistic(Statistic &other) = default;
 
-    void setCount(int count);
+    Statistic(Statistic &&other);
+
+    void setSeed(time_t seed) noexcept;
+
+    void setCount(int count) noexcept;
 
     void addEvent(double event);
 
-    std::vector<double> getEventsList() const;
+    [[nodiscard]] std::vector<double> getEventsList() const;
 
-private:
+    ~Statistic() = default;
+protected:
     std::map<double, int> m_events;
     time_t                m_seed;
     int                   m_count;

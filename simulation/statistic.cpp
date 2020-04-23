@@ -12,12 +12,23 @@ Statistic::Statistic(int count, time_t seed)
     // Empty constructor
 }
 
-void Statistic::setSeed(time_t seed)
+Statistic::Statistic(Statistic &&other)
+{
+    m_count  = other.m_count;
+    m_events = other.m_events;
+    m_seed   = other.m_seed;
+
+    other.m_count = 0;
+    other.m_seed  = 0;
+    other.m_events.clear();
+}
+
+void Statistic::setSeed(time_t seed) noexcept
 {
     m_seed = seed;
 }
 
-void Statistic::setCount(int count)
+void Statistic::setCount(int count) noexcept
 {
     m_count = count;
 }
