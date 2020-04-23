@@ -1,3 +1,4 @@
+// Copyright Lebedev Alexander 2020
 #include <distribution.hpp>
 #include <utils.hpp>
 

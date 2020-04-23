@@ -1,3 +1,4 @@
+// Copyright Lebedev Alexander 2020
 #include "distribution.hpp"
 
 void Distribution::setInversedCumulativeFunction(std::function<double(double )> inversedCumulativeFunction)

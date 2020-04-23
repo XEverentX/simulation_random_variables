@@ -1,3 +1,4 @@
+// Copyright Lebedev Alexander 2020
 #pragma once
 
 namespace util
