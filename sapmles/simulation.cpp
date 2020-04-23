@@ -1,5 +1,5 @@
-#include "./../algorithms/distribution.hpp"
-#include "./../algorithms/utils.hpp"
+#include <distribution.hpp>
+#include <utils.hpp>
 
 #include <iostream>
 #include <functional>
@@ -10,10 +10,22 @@ int main() {
     double alpha  = 0.;
     int    count  = 0;
 
-    initParametrs(lambda, alpha, count);
+    util::initParameters(lambda, count);
+    alpha = 2.0 * (1 / lambda - 1);
 
     auto inversedCumulativeFunction = [=] (double x) -> double {
-        return -log(lambda * x) / lambda;
+        if (!util::belongsTo<double>(x, 0., 1.))
+        {
+            throw 5;
+        }
+
+        if (util::belongsTo<double>(x, 0., -alpha / 2.))
+        {
+            return alpha - sqrt(-2. * alpha * x);
+        } else
+        {
+            return log(-lambda * (x - 2.)) / lambda;
+        }
     };
 
     Distribution distribution;
