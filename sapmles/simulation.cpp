@@ -14,12 +14,12 @@ int main() {
     alpha = 2.0 * (1 / lambda - 1);
 
     auto inversedCumulativeFunction = [=] (double x) -> double {
-        if (!util::belongsTo<double>(x, 0., 1.))
+        if (!util::belongsTo(x, 0., 1.))
         {
             throw 5;
         }
 
-        if (util::belongsTo<double>(x, 0., -alpha / 2.))
+        if (util::belongsTo(x, 0., -alpha / 2.))
         {
             return alpha - sqrt(-2. * alpha * x);
         } else
