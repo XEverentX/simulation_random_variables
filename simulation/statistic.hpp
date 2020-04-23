@@ -14,17 +14,17 @@ public:
 
     Statistic(Statistic &&other);
 
+    ~Statistic() = default;
+
     void setSeed(time_t seed) noexcept;
 
     void setCount(int count) noexcept;
 
     void addEvent(double event);
 
-    [[nodiscard]] std::vector<double> getEventsList() const;
-
-    ~Statistic() = default;
+    [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
 protected:
-    std::map<double, int> m_events;
-    time_t                m_seed;
-    int                   m_count;
+    std::vector<double> m_events;
+    time_t              m_seed;
+    int                 m_count;
 };
