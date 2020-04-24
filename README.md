@@ -33,5 +33,5 @@ You can specify the parameters of simulation by tow way:
 
 - Input interface in the begin of the program
 - Transfer by execution arguments using flowing keys:
-  - `-l` <lambda>
-  - `-c` <count>
+  - `-l` lambda
+  - `-c` count
