@@ -6,12 +6,13 @@
 #include <functional>
 #include <cmath>
 
-int main() {
+int main(int argc, char **argv)
+{
     double lambda = 0.;
     double alpha  = 0.;
     int    count  = 0;
 
-    util::initParameters(lambda, count);
+    util::initParameters(lambda, count, argc, argv);
     alpha = 2.0 * (1 / lambda - 1);
 
     auto inversedCumulativeFunction = [=] (double x) -> double {
