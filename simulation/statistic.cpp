@@ -1,3 +1,6 @@
+// Copyright Lebedev Alexander 2020
+#include <algorithm>
+
 #include "statistic.hpp"
 
 Statistic::Statistic(int count)
@@ -35,16 +38,17 @@ void Statistic::setCount(int count) noexcept
 
 void Statistic::addEvent(double event)
 {
-    m_events[event]++;
+    m_events.push_back(event);
 }
 
-std::vector<double> Statistic::getEventsList() const
+std::vector<double> Statistic::getEventsList(const bool shouldBeSorted) const
 {
-    std::vector<double> eventsList;
-    for (auto x : m_events)
+    if (shouldBeSorted)
     {
-        eventsList.push_back(x.first);
+        auto result = m_events;
+        std::sort(result.begin(), result.end());
+        
+        return result;
     }
-
-    return eventsList;
+    return m_events;
 }

@@ -13,7 +13,7 @@ cmake ..
 cmake --build . --config RELEASE
 ```
 
-There is two task's able to run. Use `simulation` as `<excecutable>` to run.
+Use `simulation` as `<excecutable>`.
 
 To run under `linux` use:
 
@@ -26,3 +26,12 @@ To run under `windows` use:
 ```bash
 .\samples\Release\<executable>.exe
 ```
+
+### Configuration
+
+You can specify the parameters of simulation by tow way:
+
+- Input interface in the begin of the program
+- Transfer by execution arguments using flowing keys:
+  - `-l` lambda
+  - `-c` count

@@ -1,3 +1,4 @@
+// Copyright Lebedev Alexander 2020
 #pragma once
 
 #include "statistic.hpp"
@@ -11,14 +12,13 @@ class Distribution
 public:
     Distribution() = default;
 
-    void setInversedCumulativeFunction (std::function<double(double )> inversedCumulativeFunction);
-
-    auto getValue(double x) const -> double;
-
-    auto experiment(int count) const -> Statistic;
-
     ~Distribution() = default;
 
+    void setInversedCumulativeFunction (std::function<double(double )> inversedCumulativeFunction);
+
+    [[nodiscard]] auto getValue(double x) const -> double;
+
+    [[nodiscard]] auto experiment(int count) const -> Statistic;
 private:
     std::function<double(double )> m_inversedCumulativeFunction;
 };
