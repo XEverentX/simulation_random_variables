@@ -10,7 +10,6 @@ find_package(Qt5PrintSupport)
 
 add_executable(simulate
                mainwindow.cpp
-               mainwindow.ui
                main.cpp
                qcustomplot.cpp
 )
