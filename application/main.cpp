@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
   Experement window;
  
   window.resize(1080, 720);
-  window.setWindowTitle("Experiment");
+  window.setWindowTitle("Experement");
   window.show();
  
   return app.exec();
