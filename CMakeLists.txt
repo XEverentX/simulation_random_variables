@@ -22,7 +22,7 @@ set_target_properties(simulation PROPERTIES CXX_STANDARD 17)
 add_executable(simulate
                application/mainwindow.cpp
                application/main.cpp
-               application/qcustomplot.cpp
+               3rdparty/qcustomplot.cpp
 )
 
 target_link_libraries(simulate simulation)
