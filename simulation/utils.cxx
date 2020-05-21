@@ -40,4 +40,10 @@ namespace util
     {
         return (x >= lowBoundary && x <= highBoundary);
     }
+
+    template<typename Type>
+    auto inline sqr(Type x) -> Type
+    {
+        return x * x;
+    }
 }

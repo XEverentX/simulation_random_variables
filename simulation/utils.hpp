@@ -7,6 +7,9 @@ namespace util
 
     template<typename Type = double>
     auto inline belongsTo(Type x, Type lowBoundary, Type highBoundary) -> bool;
+
+    template<typename Type>
+    auto inline sqr(Type x) -> Type;
 }
 
 #include "utils.cxx"

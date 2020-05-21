@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "statistic.hpp"
+#include <utils.hpp>
 
 Statistic::Statistic(int count)
         : m_count(count)
@@ -36,6 +37,12 @@ void Statistic::setCount(int count) noexcept
     m_count = count;
 }
 
+void Statistic::setParameters(double alpha, double lambda)
+{
+    m_alpha  = alpha;
+    m_lambda = lambda;
+}
+
 void Statistic::addEvent(double event)
 {
     m_events.push_back(event);
@@ -51,4 +58,35 @@ std::vector<double> Statistic::getEventsList(const bool shouldBeSorted) const
         return result;
     }
     return m_events;
+}
+
+void Statistic::calculate()
+{
+    m_sampleMean = 0.;
+    m_sampleDispersion = 0.;
+
+    for (auto x : m_events)
+    {
+        m_sampleMean += x;
+    }
+    m_sampleMean /= m_count;
+
+    for (auto x : m_events)
+    {
+        m_sampleDispersion += (x - m_sampleMean);
+    }
+    m_sampleDispersion /= m_count;
+
+    m_scale = m_events[m_count - 1] - m_events[0];
+
+    auto n2 = m_count >> 2;
+    m_sampleMedian = (m_count % 2 ? m_events[n2 + 1] : (m_events[n2] + m_events[n2 + 1]) / 2.);
+
+    m_theoreticalExpectedValue = 1. / util::sqr(m_lambda) - util::sqr(m_alpha) / 6.;
+
+    auto pow3 = [] (double x) -> double {
+        return x * x * x;
+    };
+
+    m_theoreticalDispersion = 2. / pow3(m_lambda) - pow3(m_alpha) / 12. - util::sqr(m_theoreticalExpectedValue);
 }

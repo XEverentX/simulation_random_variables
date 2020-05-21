@@ -71,10 +71,23 @@ void Experement::run()
         }
     };
 
+    auto cumulativeFunction = [=] (double x) -> double {
+        if (util::belongsTo(x, alpha, 0.))
+        {
+            return -1 * util::sqr(x) / (2 * alpha) + x - alpha / 2;
+        } else
+        {
+            return -alpha / 2 - (exp(-lambda * x) - 1) / lambda + 1;
+        }
+    };
+
     Distribution distribution;
     distribution.setInversedCumulativeFunction(inversedCumulativeFunction);
+    distribution.setCumulativeFunction(cumulativeFunction);
 
     auto statistic = distribution.experiment(count);
+
+    statistic.setParameters(alpha, lambda);
 
     auto v = statistic.getEventsList();
 

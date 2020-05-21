@@ -6,6 +6,11 @@ void Distribution::setInversedCumulativeFunction(std::function<double(double )> 
     m_inversedCumulativeFunction = inversedCumulativeFunction;
 }
 
+void Distribution::setCumulativeFunction(std::function<double(double )> cumulativeFunction)
+{
+    m_cumulativeFunction = cumulativeFunction;
+}
+
 auto Distribution::getValue(double x) const -> double
 {
     return m_inversedCumulativeFunction(x);
