@@ -122,3 +122,8 @@ void Statistic::calculate()
 
     calcDispersion();
 }
+
+double Statistic::getHistSegmentsLen(uint32_t count) const
+{
+    return m_scale / count;
+}
