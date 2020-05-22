@@ -13,11 +13,12 @@
  
 Experement::Experement(QWidget *parent)
     : QWidget(parent) {
-        
+
     QVBoxLayout *layout = new QVBoxLayout(this);
     QHBoxLayout *header = new QHBoxLayout();
     QGridLayout *grid = new QGridLayout(); 
     QHBoxLayout *graphLayout = new QHBoxLayout();
+    QHBoxLayout *histLayout = new QHBoxLayout();
  
     lambdaLineEdit = new QLineEdit("4", this);
     countLineEdit  = new QLineEdit("10000", this);
@@ -27,19 +28,21 @@ Experement::Experement(QWidget *parent)
     auto statLabel = new QLabel("Сharacteristics:", this);
     auto histLable = new QLabel("Histogram init:", this);
 
-    lambdaLable->setMaximumHeight(10);
-    statLabel->setMaximumHeight(10);
-    histLable->setMaximumHeight(10);
+    lambdaLable->setMaximumHeight(12);
+    statLabel->setMaximumHeight(12);
+    histLable->setMaximumHeight(12);
  
     runButton = new QPushButton("Run", this);
+    auto plotButton = new QPushButton("Replot Hist", this);
+    plotButton->setMaximumWidth(150);
 
     table = new QTableWidget(2, 10001, this);
     statisticTable = new QTableWidget(2, 8, this);
     histTable = new QTableWidget(2, 1001, this);
 
-    table->setMaximumHeight(100);
-    statisticTable->setMaximumHeight(100);
-    histTable->setMaximumHeight(100);
+    table->setMaximumHeight(110);
+    statisticTable->setMaximumHeight(110);
+    histTable->setMaximumHeight(110);
 
     histTable->setItem(0, 0, new QTableWidgetItem("Count / Values"));
     histTable->setItem(1, 0, new QTableWidgetItem("30"));
@@ -75,7 +78,10 @@ Experement::Experement(QWidget *parent)
     layout->addWidget(statLabel);
     layout->addWidget(statisticTable);
 
-    layout->addWidget(histLable);
+    histLayout->addWidget(histLable);
+    histLayout->addWidget(plotButton);
+
+    layout->addLayout(histLayout);
     layout->addWidget(histTable);
 
     // Plot
@@ -104,11 +110,6 @@ Experement::Experement(QWidget *parent)
     histPlot->xAxis2->setTickLabels(false);
     histPlot->yAxis2->setVisible(true);
     histPlot->yAxis2->setTickLabels(false);
-    histPlot->setInteraction(QCP::iRangeZoom,true);
-    histPlot->setInteraction(QCP::iRangeDrag, true); 
-
-    connect(histPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), histPlot->xAxis2, SLOT(setRange(QCPRange)));
-    connect(histPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), histPlot->yAxis2, SLOT(setRange(QCPRange)));
 
     QSizePolicy hsp = histPlot->sizePolicy();
     hsp.setHorizontalStretch(1);
@@ -122,10 +123,12 @@ Experement::Experement(QWidget *parent)
     setLayout(layout);
 
     connect(runButton, &QPushButton::clicked, this, &Experement::run);
+    connect(plotButton, &QPushButton::clicked, this, &Experement::plotHist);
 }
 
 void Experement::run()
 {
+    // Init
     double lambda = lambdaLineEdit->text().toDouble();
     double alpha  = 0.;
     int    count  = countLineEdit->text().toInt();
@@ -165,9 +168,12 @@ void Experement::run()
     distribution.setInversedCumulativeFunction(inversedCumulativeFunction);
     distribution.setCumulativeFunction(cumulativeFunction);
 
+    // Run
     auto statistic = distribution.experiment(count);
 
     statistic.setParameters(alpha, lambda);
+
+    statistic.calculate();
 
     auto v = statistic.getEventsList();
 
@@ -176,6 +182,7 @@ void Experement::run()
     QVector<double> y1(count);
     QVector<double> y2(count);
 
+    // Set results into the table
     Experement::table->setColumnCount(count + 1);
 
     for (int i = 0; i < count; i++)
@@ -187,7 +194,8 @@ void Experement::run()
         y1[i] = coeficient * (i + 1);
         y2[i] = cumulativeFunction(v[i]);
     }
-    
+
+    // Plot cumulative function
     customPlot->clearGraphs();
     customPlot->addGraph();
     customPlot->addGraph();
@@ -209,8 +217,18 @@ void Experement::run()
 
     customPlot->replot();
 
-    statistic.calculate();
+    int histCount = Experement::histTable->item(1, 0)->text().toInt();
 
+    segmentLen = statistic.getHistSegmentsLen(histCount);
+    for (int i = 0; i < histCount; i++)
+    {
+        histTable->setItem(1, i + 1, new QTableWidgetItem(QString::number(segmentLen * (i + 1) + v[0])));
+    }
+    
+    // Plot hstogram
+    plotHist();
+
+    // Insert statistic into the table
     auto diffMean = std::fabs(statistic.m_theoreticalExpectedValue - statistic.m_sampleMean);
     auto diffDispersion = std::fabs(statistic.m_theoreticalDispersion - statistic.m_sampleDispersion);
 
@@ -224,4 +242,77 @@ void Experement::run()
     Experement::statisticTable->setItem(1, 7, new QTableWidgetItem(QString::number(statistic.m_scale)));
 
     Experement::statisticTable->resizeColumnsToContents();
+}
+
+void Experement::plotHist()
+{
+    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+
+    std::vector<double> points;
+    for (int i = 0; i < histCount; i++)
+    {
+        points.push_back(Experement::histTable->item(1, i + 1)->text().toDouble());
+    }
+
+    histPlot->clearGraphs();
+
+    QCPBars* fossil = new QCPBars(histPlot->xAxis, histPlot->yAxis);
+ 
+    QPen pen;
+    pen.setWidthF(1.5);
+    pen.setColor(QColor(50, 50, 100));
+    fossil->setPen(pen);
+    fossil->setBrush(QColor(50, 50, 250, 70));
+ 
+    QVector<double> ticks;
+    QVector<QString> labels;
+
+    for (int i = 0; i < histCount; i++)
+    {
+        labels.push_back(histTable->item(1, i + 1)->text());
+        ticks.push_back(i + 1);
+    }
+    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
+    textTicker->addTicks(ticks, labels);
+    histPlot->xAxis->setTicker(textTicker);
+    histPlot->xAxis->setTickLabelRotation(60);
+    histPlot->xAxis->setSubTicks(false);
+    histPlot->xAxis->setTickLength(0, 4);
+    histPlot->xAxis->grid()->setVisible(true);
+    histPlot->xAxis->setRange(0, histCount);
+ 
+    histPlot->yAxis->setRange(0, 1);
+    histPlot->yAxis->setPadding(5);
+    histPlot->yAxis->setLabel("Histogram");
+    histPlot->yAxis->grid()->setSubGridVisible(true);
+    QPen gridPen;
+    gridPen.setStyle(Qt::SolidLine);
+    gridPen.setColor(QColor(0, 0, 0, 25));
+    histPlot->yAxis->grid()->setPen(gridPen);
+    gridPen.setStyle(Qt::DotLine);
+    histPlot->yAxis->grid()->setSubGridPen(gridPen);
+ 
+    QVector<double> fossilData(histCount);
+    std::vector<int> data(histCount);
+
+    int count = countLineEdit->text().toInt();
+
+    for (int i = 1; i <= count; i++)
+    {
+        double value = table->item(1, i)->text().toDouble();
+        int number = std::lower_bound(points.begin(), points.end(), value) - points.begin();
+        if (number >= histCount) number--;
+        data[number]++;
+    }
+
+    for (int i = 0; i < histCount; i++)
+    {
+        fossilData[i] = static_cast<double>(data[i]) / (count * segmentLen);
+    }
+
+    fossil->setData(ticks, fossilData);
+
+    histPlot->replot();
+
+    histPlot->removePlottable(fossil);
 }

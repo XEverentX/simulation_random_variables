@@ -28,6 +28,8 @@ public:
 
     void calculate();
 
+    double getHistSegmentsLen(uint32_t count) const;
+
     [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
 
     std::vector<double> m_events;

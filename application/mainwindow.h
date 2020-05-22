@@ -18,6 +18,8 @@ public:
 
     void run();
 
+    void plotHist();
+
 private:
     QLineEdit *lambdaLineEdit;
     QLineEdit *countLineEdit;
@@ -33,4 +35,6 @@ private:
 
     QCustomPlot *customPlot;
     QCustomPlot *histPlot;
+
+    double segmentLen;
 };
