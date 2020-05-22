@@ -6,6 +6,7 @@
 #include <map>
 class Statistic final
 {
+    friend class Experement;
 public:
     Statistic(int count = 0);
 
@@ -21,11 +22,37 @@ public:
 
     void setCount(int count) noexcept;
 
+    void setParameters(double alpha, double lambda);
+
     void addEvent(double event);
 
+    void calculate();
+
     [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
-protected:
+
     std::vector<double> m_events;
+    
+protected:
+    void inline calcSampleMean();
+
+    void inline calcSampleDispersion();
+
+    void inline calcScale();
+
+    void inline calcSampleMedian();
+
+    void inline calcExpectedValue();
+    
+    void inline calcDispersion();
+
     time_t              m_seed;
     int                 m_count;
+    double              m_alpha;
+    double              m_lambda;
+    double              m_sampleMean;
+    double              m_sampleDispersion;
+    double              m_sampleMedian;
+    double              m_scale;
+    double              m_theoreticalExpectedValue;
+    double              m_theoreticalDispersion;
 };

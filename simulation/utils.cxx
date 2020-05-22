@@ -40,4 +40,21 @@ namespace util
     {
         return (x >= lowBoundary && x <= highBoundary);
     }
+
+    template<typename Type>
+    auto inline sqr(Type x) -> Type
+    {
+        return x * x;
+    }
+
+    template<typename Type>
+    auto inline pow(Type x, uint32_t n) -> Type
+    {
+        Type result = static_cast<Type>(1);
+        for (int i = 0; i < n; i++)
+        {
+            result *= x;
+        }
+        return result;
+    }
 }
