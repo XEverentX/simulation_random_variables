@@ -18,8 +18,8 @@ Experement::Experement(QWidget *parent)
     QHBoxLayout *header = new QHBoxLayout();
     QGridLayout *grid = new QGridLayout(); 
  
-    lambdaLineEdit = new QLineEdit("2", this);
-    countLineEdit  = new QLineEdit("100", this);
+    lambdaLineEdit = new QLineEdit("4", this);
+    countLineEdit  = new QLineEdit("10000", this);
 
     lambdaLable = new QLabel("lambda: ", this);
     countLable  = new QLabel("count: ", this);
@@ -27,7 +27,7 @@ Experement::Experement(QWidget *parent)
  
     runButton = new QPushButton("Run", this);
 
-    table = new QTableWidget(2, 1000, this);
+    table = new QTableWidget(2, 10001, this);
     statisticTable = new QTableWidget(2, 8, this);
 
     table->setItem(0, 0, new QTableWidgetItem("№"));
@@ -62,6 +62,8 @@ Experement::Experement(QWidget *parent)
     customPlot->xAxis2->setTickLabels(false);
     customPlot->yAxis2->setVisible(true);
     customPlot->yAxis2->setTickLabels(false);
+    customPlot->setInteraction(QCP::iRangeZoom,true);
+    customPlot->setInteraction(QCP::iRangeDrag, true); 
 
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
     connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
@@ -137,10 +139,9 @@ void Experement::run()
         x[i] = v[i];
         y1[i] = coeficient * (i + 1);
         y2[i] = cumulativeFunction(v[i]);
-
-        std::cerr << y2[i] << ' ';
     }
     
+    customPlot->clearGraphs();
     customPlot->addGraph();
     customPlot->addGraph();
     customPlot->graph(0)->setPen(QPen(Qt::blue));
@@ -148,12 +149,16 @@ void Experement::run()
 
     customPlot->graph(0)->setData(x, y1);
     customPlot->graph(0)->rescaleAxes();
+    customPlot->graph(0)->setName("Sampled");
 
     customPlot->graph(1)->setData(x, y2);
     customPlot->graph(1)->rescaleAxes();
+    customPlot->graph(1)->setName("Theoretical");
 
     customPlot->xAxis->setRange(x[0], x[count - 1]);
     customPlot->yAxis->setRange(0, 1);
+
+    customPlot->legend->setVisible(true);
 
     customPlot->replot();
 
