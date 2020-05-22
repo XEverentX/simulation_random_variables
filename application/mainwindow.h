@@ -29,6 +29,8 @@ private:
 
     QTableWidget *table;
     QTableWidget *statisticTable;
+    QTableWidget *histTable;
 
     QCustomPlot *customPlot;
+    QCustomPlot *histPlot;
 };

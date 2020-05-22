@@ -17,6 +17,7 @@ Experement::Experement(QWidget *parent)
     QVBoxLayout *layout = new QVBoxLayout(this);
     QHBoxLayout *header = new QHBoxLayout();
     QGridLayout *grid = new QGridLayout(); 
+    QHBoxLayout *graphLayout = new QHBoxLayout();
  
     lambdaLineEdit = new QLineEdit("4", this);
     countLineEdit  = new QLineEdit("10000", this);
@@ -24,14 +25,33 @@ Experement::Experement(QWidget *parent)
     lambdaLable = new QLabel("lambda: ", this);
     countLable  = new QLabel("count: ", this);
     auto statLabel = new QLabel("Сharacteristics:", this);
+    auto histLable = new QLabel("Histogram init:", this);
+
+    lambdaLable->setMaximumHeight(10);
+    statLabel->setMaximumHeight(10);
+    histLable->setMaximumHeight(10);
  
     runButton = new QPushButton("Run", this);
 
     table = new QTableWidget(2, 10001, this);
     statisticTable = new QTableWidget(2, 8, this);
+    histTable = new QTableWidget(2, 1001, this);
+
+    table->setMaximumHeight(100);
+    statisticTable->setMaximumHeight(100);
+    histTable->setMaximumHeight(100);
+
+    histTable->setItem(0, 0, new QTableWidgetItem("Count / Values"));
+    histTable->setItem(1, 0, new QTableWidgetItem("30"));
+
+    for (int i = 0; i < 1000; i++)
+    {
+        histTable->setItem(0, i + 1, new QTableWidgetItem((QString::number(i + 1))));
+    }
 
     table->setItem(0, 0, new QTableWidgetItem("№"));
     table->setItem(1, 0, new QTableWidgetItem("X"));
+
     statisticTable->setItem(0, 0, new QTableWidgetItem("ExpectedValue"));
     statisticTable->setItem(0, 1, new QTableWidgetItem("Mean"));
     statisticTable->setItem(0, 2, new QTableWidgetItem("|ExpectedValue - Mean|"));
@@ -55,6 +75,9 @@ Experement::Experement(QWidget *parent)
     layout->addWidget(statLabel);
     layout->addWidget(statisticTable);
 
+    layout->addWidget(histLable);
+    layout->addWidget(histTable);
+
     // Plot
     customPlot = new QCustomPlot(this);
 
@@ -72,7 +95,29 @@ Experement::Experement(QWidget *parent)
     sp.setHorizontalStretch(1);
     sp.setVerticalStretch(1);
     customPlot->setSizePolicy(sp);
-    layout->addWidget(customPlot);
+
+    graphLayout->addWidget(customPlot);
+
+    histPlot = new QCustomPlot(this);
+
+    histPlot->xAxis2->setVisible(true);
+    histPlot->xAxis2->setTickLabels(false);
+    histPlot->yAxis2->setVisible(true);
+    histPlot->yAxis2->setTickLabels(false);
+    histPlot->setInteraction(QCP::iRangeZoom,true);
+    histPlot->setInteraction(QCP::iRangeDrag, true); 
+
+    connect(histPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), histPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(histPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), histPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    QSizePolicy hsp = histPlot->sizePolicy();
+    hsp.setHorizontalStretch(1);
+    hsp.setVerticalStretch(1);
+    histPlot->setSizePolicy(hsp);
+
+    graphLayout->addWidget(histPlot);
+
+    layout->addLayout(graphLayout);
 
     setLayout(layout);
 
@@ -130,6 +175,8 @@ void Experement::run()
     QVector<double> x(count);
     QVector<double> y1(count);
     QVector<double> y2(count);
+
+    Experement::table->setColumnCount(count + 1);
 
     for (int i = 0; i < count; i++)
     {
