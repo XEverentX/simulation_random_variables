@@ -10,6 +10,9 @@ namespace util
 
     template<typename Type>
     auto inline sqr(Type x) -> Type;
+
+    template<typename Type>
+    auto inline pow(Type x, uint32_t n) -> Type;
 }
 
 #include "utils.cxx"
