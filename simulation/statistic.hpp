@@ -29,8 +29,9 @@ public:
     void calculate();
 
     [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
-protected:
+
     std::vector<double> m_events;
+protected:
     time_t              m_seed;
     int                 m_count;
     double              m_alpha;

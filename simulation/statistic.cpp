@@ -62,6 +62,8 @@ std::vector<double> Statistic::getEventsList(const bool shouldBeSorted) const
 
 void Statistic::calculate()
 {
+    std::sort(m_events.begin(), m_events.end());
+
     m_sampleMean = 0.;
     m_sampleDispersion = 0.;
 

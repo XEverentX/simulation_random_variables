@@ -6,6 +6,8 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
+
+#include "3rdparty/qcustomplot.h"
  
 class Experement : public QWidget {
     
@@ -26,4 +28,7 @@ private:
     QPushButton *runButton;
 
     QTableWidget *table;
+    QTableWidget *statisticTable;
+
+    QCustomPlot *customPlot;
 };
