@@ -31,7 +31,20 @@ public:
     [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
 
     std::vector<double> m_events;
+    
 protected:
+    void inline calcSampleMean();
+
+    void inline calcSampleDispersion();
+
+    void inline calcScale();
+
+    void inline calcSampleMedian();
+
+    void inline calcExpectedValue();
+    
+    void inline calcDispersion();
+
     time_t              m_seed;
     int                 m_count;
     double              m_alpha;

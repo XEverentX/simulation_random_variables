@@ -60,34 +60,65 @@ std::vector<double> Statistic::getEventsList(const bool shouldBeSorted) const
     return m_events;
 }
 
-void Statistic::calculate()
+void inline Statistic::calcSampleMean()
 {
-    std::sort(m_events.begin(), m_events.end());
-
     m_sampleMean = 0.;
-    m_sampleDispersion = 0.;
-
-    auto l = m_lambda;
-    auto a = m_alpha;
-
+    
     for (auto x : m_events)
     {
         m_sampleMean += x;
     }
     m_sampleMean /= m_count;
+}
+
+void inline Statistic::calcSampleDispersion()
+{
+    m_sampleDispersion = 0.;
 
     for (auto x : m_events)
     {
         m_sampleDispersion += util::sqr(x - m_sampleMean);
     }
     m_sampleDispersion /= m_count;
+}
 
+void inline Statistic::calcScale()
+{
     m_scale = m_events[m_count - 1] - m_events[0];
+}
 
+void inline Statistic::calcSampleMedian()
+{
     auto n2 = m_count >> 2;
     m_sampleMedian = (m_count % 2 ? m_events[n2 + 1] : (m_events[n2] + m_events[n2 + 1]) / 2.);
+}
 
+void inline Statistic::calcExpectedValue()
+{
     m_theoreticalExpectedValue = 1. / util::sqr(m_lambda) - util::sqr(m_alpha) / 6.;
+}
+
+void inline Statistic::calcDispersion()
+{
+    auto l = m_lambda;
+    auto a = m_alpha;
 
     m_theoreticalDispersion = -util::pow(a, 3) / 12. + 2. / util::pow(l, 3) - 1. / util::pow(l, 4) + a * a / (3. * l * l) - util::pow(a, 4) / 36.;
+}
+
+void Statistic::calculate()
+{
+    std::sort(m_events.begin(), m_events.end());
+
+    calcSampleMean();
+
+    calcSampleDispersion();
+
+    calcScale();
+
+    calcSampleMedian();
+
+    calcExpectedValue();
+
+    calcDispersion();
 }
