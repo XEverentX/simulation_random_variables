@@ -67,6 +67,9 @@ void Statistic::calculate()
     m_sampleMean = 0.;
     m_sampleDispersion = 0.;
 
+    auto l = m_lambda;
+    auto a = m_alpha;
+
     for (auto x : m_events)
     {
         m_sampleMean += x;
@@ -75,7 +78,7 @@ void Statistic::calculate()
 
     for (auto x : m_events)
     {
-        m_sampleDispersion += (x - m_sampleMean);
+        m_sampleDispersion += util::sqr(x - m_sampleMean);
     }
     m_sampleDispersion /= m_count;
 
@@ -86,9 +89,5 @@ void Statistic::calculate()
 
     m_theoreticalExpectedValue = 1. / util::sqr(m_lambda) - util::sqr(m_alpha) / 6.;
 
-    auto pow3 = [] (double x) -> double {
-        return x * x * x;
-    };
-
-    m_theoreticalDispersion = 2. / pow3(m_lambda) - pow3(m_alpha) / 12. - util::sqr(m_theoreticalExpectedValue);
+    m_theoreticalDispersion = -util::pow(a, 3) / 12. + 2. / util::pow(l, 3) - 1. / util::pow(l, 4) + a * a / (3. * l * l) - util::pow(a, 4) / 36.;
 }
