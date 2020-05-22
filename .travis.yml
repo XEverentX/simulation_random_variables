@@ -18,8 +18,9 @@ matrix:
 
 before_install:
  - eval "${MATRIX_EVAL}"
+ - sudo apt update
  - sudo apt install qt5-default
- 
+
 script:
   - mkdir build
   - cd build
