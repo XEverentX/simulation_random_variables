@@ -175,4 +175,6 @@ void Experement::run()
     Experement::statisticTable->setItem(1, 5, new QTableWidgetItem(QString::number(diffDispersion)));
     Experement::statisticTable->setItem(1, 6, new QTableWidgetItem(QString::number(statistic.m_sampleMedian)));
     Experement::statisticTable->setItem(1, 7, new QTableWidgetItem(QString::number(statistic.m_scale)));
+
+    Experement::statisticTable->resizeColumnsToContents();
 }
