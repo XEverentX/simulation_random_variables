@@ -93,10 +93,10 @@ void Experement::run()
 
         if (util::belongsTo(x, 0., -alpha / 2.))
         {
-            return alpha - sqrt(-2. * alpha * x);
+            return alpha + sqrt(-2. * alpha * x);
         } else
         {
-            return log(-lambda * (x - 2.)) / lambda;
+            return -log(-lambda * (x - 1.)) / lambda;
         }
     };
 
@@ -107,10 +107,10 @@ void Experement::run()
         }
         if (util::belongsTo(x, alpha, 0.))
         {
-            return -1. * util::sqr(x) / (2. * alpha) + x - alpha / 2.;
+            return -(x * x) / (2. * alpha) + x - alpha / 2.;
         } else
         {
-            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda + 1.;
+            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda;
         }
     };
 
