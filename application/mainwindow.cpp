@@ -39,13 +39,24 @@ Experement::Experement(QWidget *parent)
     table = new QTableWidget(2, 10001, this);
     statisticTable = new QTableWidget(2, 8, this);
     histTable = new QTableWidget(2, 1001, this);
+    densityTable = new QTableWidget(3, 30, this);
 
-    table->setMaximumHeight(110);
-    statisticTable->setMaximumHeight(110);
-    histTable->setMaximumHeight(110);
+    table->setMaximumHeight(85);
+    statisticTable->setMaximumHeight(85);
+    histTable->setMaximumHeight(85);
+    densityTable->setMaximumHeight(115);
+
+    table->horizontalHeader()->hide();
+    statisticTable->horizontalHeader()->hide();
+    histTable->horizontalHeader()->hide();
+    densityTable->horizontalHeader()->hide();
 
     histTable->setItem(0, 0, new QTableWidgetItem("Count / Values"));
     histTable->setItem(1, 0, new QTableWidgetItem("30"));
+    
+    densityTable->setItem(0, 0, new QTableWidgetItem("x[i]"));
+    densityTable->setItem(1, 0, new QTableWidgetItem("f(x[i])"));
+    densityTable->setItem(2, 0, new QTableWidgetItem("n[i]/(n * d[i])"));
 
     for (int i = 0; i < 1000; i++)
     {
@@ -83,6 +94,8 @@ Experement::Experement(QWidget *parent)
 
     layout->addLayout(histLayout);
     layout->addWidget(histTable);
+
+    layout->addWidget(densityTable);
 
     // Plot
     customPlot = new QCustomPlot(this);
@@ -222,7 +235,7 @@ void Experement::run()
     segmentLen = statistic.getHistSegmentsLen(histCount);
     for (int i = 0; i < histCount; i++)
     {
-        histTable->setItem(1, i + 1, new QTableWidgetItem(QString::number(segmentLen * (i + 1) + v[0])));
+        histTable->setItem(1, i + 1, new QTableWidgetItem(QString::number(segmentLen * i + v[0])));
     }
     
     // Plot hstogram
@@ -267,10 +280,13 @@ void Experement::plotHist()
     QVector<double> ticks;
     QVector<QString> labels;
 
-    for (int i = 0; i < histCount; i++)
+    for (int i = 1; i < histCount; i++)
     {
-        labels.push_back(histTable->item(1, i + 1)->text());
-        ticks.push_back(i + 1);
+        double label = (points[i] + points[i - 1]) / 2.;
+        label = static_cast<double>(static_cast<int>(label * 100)) / 100.;
+
+        labels.push_back(QString::number(label));
+        ticks.push_back(i);
     }
     QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
     textTicker->addTicks(ticks, labels);
@@ -292,7 +308,7 @@ void Experement::plotHist()
     gridPen.setStyle(Qt::DotLine);
     histPlot->yAxis->grid()->setSubGridPen(gridPen);
  
-    QVector<double> fossilData(histCount);
+    QVector<double> fossilData(histCount - 1);
     std::vector<int> data(histCount);
 
     int count = countLineEdit->text().toInt();
@@ -305,9 +321,9 @@ void Experement::plotHist()
         data[number]++;
     }
 
-    for (int i = 0; i < histCount; i++)
+    for (int i = 0; i < histCount - 1; i++)
     {
-        fossilData[i] = static_cast<double>(data[i]) / (count * segmentLen);
+        fossilData[i] = static_cast<double>(data[i + 1]) / (count * (points[i + 1] - points[i]));
     }
 
     fossil->setData(ticks, fossilData);
@@ -315,4 +331,39 @@ void Experement::plotHist()
     histPlot->replot();
 
     histPlot->removePlottable(fossil);
+
+    createDensityTable(points, fossilData);
+}
+
+void Experement::createDensityTable(const std::vector<double> &points, const QVector<double> &fossilData)
+{
+    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    double lambda = lambdaLineEdit->text().toDouble();
+    double alpha  = 0.;
+
+    alpha = 2.0 * (1. / lambda - 1.);
+
+    auto densityFunction = [&] (double x) -> double {
+        if (x < alpha)
+        {
+            return 0;
+        }
+        if (util::belongsTo(x, alpha, 0.))
+        {
+            return 1. - x / alpha;
+        } else
+        {
+            return exp(-lambda * x);
+        }
+        
+    };
+
+    densityTable->setColumnCount(histCount);
+    for (int i = 1; i < histCount; i++)
+    {
+        auto point = (points[i] + points[i - 1]) / 2.;
+        Experement::densityTable->setItem(0, i, new QTableWidgetItem(QString::number(point)));
+        Experement::densityTable->setItem(1, i, new QTableWidgetItem(QString::number(densityFunction(point))));
+        Experement::densityTable->setItem(2, i, new QTableWidgetItem(QString::number(fossilData[i - 1])));
+    }
 }
