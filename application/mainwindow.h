@@ -20,6 +20,8 @@ public:
 
     void plotHist();
 
+    void createDensityTable(const std::vector<double> &points, const QVector<double> &fossilData);
+
 private:
     QLineEdit *lambdaLineEdit;
     QLineEdit *countLineEdit;
@@ -32,6 +34,7 @@ private:
     QTableWidget *table;
     QTableWidget *statisticTable;
     QTableWidget *histTable;
+    QTableWidget *densityTable;
 
     QCustomPlot *customPlot;
     QCustomPlot *histPlot;

@@ -33,7 +33,7 @@ public:
     [[nodiscard]] std::vector<double> getEventsList(const bool shouldBeSorted = true) const;
 
     std::vector<double> m_events;
-    
+
 protected:
     void inline calcSampleMean();
 
