@@ -19,17 +19,17 @@ Experement::Experement(QWidget *parent)
     QGridLayout *grid = new QGridLayout(); 
     QHBoxLayout *graphLayout = new QHBoxLayout();
     QHBoxLayout *histLayout = new QHBoxLayout();
+
+    QTabWidget *tabs = new QTabWidget(this);
  
     lambdaLineEdit = new QLineEdit("4", this);
     countLineEdit  = new QLineEdit("10000", this);
 
     lambdaLable = new QLabel("lambda: ", this);
     countLable  = new QLabel("count: ", this);
-    auto statLabel = new QLabel("Сharacteristics:", this);
     auto histLable = new QLabel("Histogram init:", this);
 
     lambdaLable->setMaximumHeight(12);
-    statLabel->setMaximumHeight(12);
     histLable->setMaximumHeight(12);
  
     runButton = new QPushButton("Run", this);
@@ -37,14 +37,12 @@ Experement::Experement(QWidget *parent)
     plotButton->setMaximumWidth(150);
 
     table = new QTableWidget(2, 10001, this);
-    statisticTable = new QTableWidget(2, 8, this);
+    statisticTable = new QTableWidget(2, 9, this);
     histTable = new QTableWidget(2, 1001, this);
     densityTable = new QTableWidget(3, 30, this);
 
-    table->setMaximumHeight(85);
-    statisticTable->setMaximumHeight(85);
-    histTable->setMaximumHeight(85);
-    densityTable->setMaximumHeight(115);
+    histTable->setMaximumHeight(100);
+    tabs->setMaximumHeight(150);
 
     table->horizontalHeader()->hide();
     statisticTable->horizontalHeader()->hide();
@@ -74,6 +72,7 @@ Experement::Experement(QWidget *parent)
     statisticTable->setItem(0, 5, new QTableWidgetItem("|Dispersion - SampleDispersion|"));
     statisticTable->setItem(0, 6, new QTableWidgetItem("Median"));
     statisticTable->setItem(0, 7, new QTableWidgetItem("Scale"));
+    statisticTable->setItem(0, 8, new QTableWidgetItem("|Max Density difference|"));
     
     grid->addWidget(lambdaLable, 0, 0);
     grid->addWidget(lambdaLineEdit, 0, 1);
@@ -84,19 +83,18 @@ Experement::Experement(QWidget *parent)
     header->addWidget(runButton);
 
     layout->addLayout(header);
-    layout->addWidget(table);
 
-    layout->addWidget(statLabel);
-    layout->addWidget(statisticTable);
+    tabs->addTab(table, "Experement");
+    tabs->addTab(statisticTable, "Сharacteristics");
+    tabs->addTab(densityTable, "Density");
+
+    layout->addWidget(tabs);
 
     histLayout->addWidget(histLable);
     histLayout->addWidget(plotButton);
 
     layout->addLayout(histLayout);
     layout->addWidget(histTable);
-
-    layout->addWidget(densityTable);
-
     // Plot
     customPlot = new QCustomPlot(this);
 
@@ -358,6 +356,8 @@ void Experement::createDensityTable(const std::vector<double> &points, const QVe
         
     };
 
+    double diff = 0.;
+
     densityTable->setColumnCount(histCount);
     for (int i = 1; i < histCount; i++)
     {
@@ -365,5 +365,8 @@ void Experement::createDensityTable(const std::vector<double> &points, const QVe
         Experement::densityTable->setItem(0, i, new QTableWidgetItem(QString::number(point)));
         Experement::densityTable->setItem(1, i, new QTableWidgetItem(QString::number(densityFunction(point))));
         Experement::densityTable->setItem(2, i, new QTableWidgetItem(QString::number(fossilData[i - 1])));
+
+        diff = std::max(diff, std::fabs(densityFunction(point) - fossilData[i - 1]));
     }
+    Experement::statisticTable->setItem(1, 8, new QTableWidgetItem(QString::number(diff)));
 }
