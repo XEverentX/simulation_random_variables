@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <distribution.hpp>
 #include <utils.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 #include <iostream>
 #include <functional>
@@ -19,40 +20,47 @@ Experement::Experement(QWidget *parent)
     QGridLayout *grid = new QGridLayout(); 
     QHBoxLayout *graphLayout = new QHBoxLayout();
     QHBoxLayout *histLayout = new QHBoxLayout();
+    QHBoxLayout *hypLayout = new QHBoxLayout();
+
+    QTabWidget *tabs = new QTabWidget(this);
  
     lambdaLineEdit = new QLineEdit("4", this);
     countLineEdit  = new QLineEdit("10000", this);
+    partitionLineEdit = new QLineEdit("30", this);
+    importanceLineEdit = new QLineEdit("0.001", this);
+    FR0LineEdit = new QLineEdit(" ", this);
 
     lambdaLable = new QLabel("lambda: ", this);
     countLable  = new QLabel("count: ", this);
-    auto statLabel = new QLabel("Сharacteristics:", this);
-    auto histLable = new QLabel("Histogram init:", this);
+    auto partitionLabel = new QLabel("Partition count:", this);
+    auto importanceLabel = new QLabel("Importance level:", this);
+    hypothesisLable = new QLabel("Hypothesis H0 is ", this);
 
     lambdaLable->setMaximumHeight(12);
-    statLabel->setMaximumHeight(12);
-    histLable->setMaximumHeight(12);
+    partitionLabel->setMaximumHeight(12);
+    hypothesisLable->setMaximumHeight(12);
  
     runButton = new QPushButton("Run", this);
     auto plotButton = new QPushButton("Replot Hist", this);
     plotButton->setMaximumWidth(150);
 
     table = new QTableWidget(2, 10001, this);
-    statisticTable = new QTableWidget(2, 8, this);
+    statisticTable = new QTableWidget(2, 9, this);
     histTable = new QTableWidget(2, 1001, this);
     densityTable = new QTableWidget(3, 30, this);
+    hypothesisTable = new QTableWidget(2, 1001, this);
 
-    table->setMaximumHeight(85);
-    statisticTable->setMaximumHeight(85);
-    histTable->setMaximumHeight(85);
-    densityTable->setMaximumHeight(115);
+    histTable->setMaximumHeight(100);
+    tabs->setMaximumHeight(150);
 
     table->horizontalHeader()->hide();
     statisticTable->horizontalHeader()->hide();
     histTable->horizontalHeader()->hide();
     densityTable->horizontalHeader()->hide();
+    hypothesisTable->horizontalHeader()->hide();
 
-    histTable->setItem(0, 0, new QTableWidgetItem("Count / Values"));
-    histTable->setItem(1, 0, new QTableWidgetItem("30"));
+    histTable->setItem(0, 0, new QTableWidgetItem("№"));
+    histTable->setItem(1, 0, new QTableWidgetItem("Value"));
     
     densityTable->setItem(0, 0, new QTableWidgetItem("x[i]"));
     densityTable->setItem(1, 0, new QTableWidgetItem("f(x[i])"));
@@ -74,6 +82,7 @@ Experement::Experement(QWidget *parent)
     statisticTable->setItem(0, 5, new QTableWidgetItem("|Dispersion - SampleDispersion|"));
     statisticTable->setItem(0, 6, new QTableWidgetItem("Median"));
     statisticTable->setItem(0, 7, new QTableWidgetItem("Scale"));
+    statisticTable->setItem(0, 8, new QTableWidgetItem("|Max Density difference|"));
     
     grid->addWidget(lambdaLable, 0, 0);
     grid->addWidget(lambdaLineEdit, 0, 1);
@@ -84,18 +93,27 @@ Experement::Experement(QWidget *parent)
     header->addWidget(runButton);
 
     layout->addLayout(header);
-    layout->addWidget(table);
 
-    layout->addWidget(statLabel);
-    layout->addWidget(statisticTable);
+    tabs->addTab(table, "Experement");
+    tabs->addTab(statisticTable, "Сharacteristics");
+    tabs->addTab(densityTable, "Density");
+    tabs->addTab(hypothesisTable, "Q");
 
-    histLayout->addWidget(histLable);
+    layout->addWidget(tabs);
+
+    histLayout->addWidget(partitionLabel);
+    histLayout->addWidget(partitionLineEdit);
+    histLayout->addWidget(importanceLabel);
+    histLayout->addWidget(importanceLineEdit);
     histLayout->addWidget(plotButton);
 
     layout->addLayout(histLayout);
     layout->addWidget(histTable);
 
-    layout->addWidget(densityTable);
+    hypLayout->addWidget(new QLabel("F(R0) = ", this));
+    hypLayout->addWidget(FR0LineEdit);
+    hypLayout->addWidget(hypothesisLable);
+    layout->addLayout(hypLayout);
 
     // Plot
     customPlot = new QCustomPlot(this);
@@ -148,34 +166,7 @@ void Experement::run()
 
     alpha = 2.0 * (1. / lambda - 1.);
 
-    auto inversedCumulativeFunction = [=] (double x) -> double {
-        if (!util::belongsTo(x, 0., 1.))
-        {
-            throw 5;
-        }
-
-        if (util::belongsTo(x, 0., -alpha / 2.))
-        {
-            return alpha + sqrt(-2. * alpha * x);
-        } else
-        {
-            return -log(-lambda * (x - 1.)) / lambda;
-        }
-    };
-
-    auto cumulativeFunction = [=] (double x) -> double {
-        if (x < alpha)
-        {
-            return 0.;
-        }
-        if (util::belongsTo(x, alpha, 0.))
-        {
-            return -(x * x) / (2. * alpha) + x - alpha / 2.;
-        } else
-        {
-            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda;
-        }
-    };
+    setFunctions();
 
     Distribution distribution;
     distribution.setInversedCumulativeFunction(inversedCumulativeFunction);
@@ -230,7 +221,7 @@ void Experement::run()
 
     customPlot->replot();
 
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    int histCount = Experement::partitionLineEdit->text().toInt();
 
     segmentLen = statistic.getHistSegmentsLen(histCount);
     for (int i = 0; i < histCount; i++)
@@ -255,11 +246,15 @@ void Experement::run()
     Experement::statisticTable->setItem(1, 7, new QTableWidgetItem(QString::number(statistic.m_scale)));
 
     Experement::statisticTable->resizeColumnsToContents();
+
+    Experement::fillHypothesisTable();
+
+    Experement::checkHypothesis();
 }
 
 void Experement::plotHist()
 {
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    int histCount = Experement::partitionLineEdit->text().toInt();
 
     std::vector<double> points;
     for (int i = 0; i < histCount; i++)
@@ -309,7 +304,8 @@ void Experement::plotHist()
     histPlot->yAxis->grid()->setSubGridPen(gridPen);
  
     QVector<double> fossilData(histCount - 1);
-    std::vector<int> data(histCount);
+    data.clear();
+    data.resize(histCount);
 
     int count = countLineEdit->text().toInt();
 
@@ -337,13 +333,29 @@ void Experement::plotHist()
 
 void Experement::createDensityTable(const std::vector<double> &points, const QVector<double> &fossilData)
 {
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    int histCount = Experement::partitionLineEdit->text().toInt();
+
+    double diff = 0.;
+
+    densityTable->setColumnCount(histCount);
+    for (int i = 1; i < histCount; i++)
+    {
+        auto point = (points[i] + points[i - 1]) / 2.;
+        Experement::densityTable->setItem(0, i, new QTableWidgetItem(QString::number(point)));
+        Experement::densityTable->setItem(1, i, new QTableWidgetItem(QString::number(densityFunction(point))));
+        Experement::densityTable->setItem(2, i, new QTableWidgetItem(QString::number(fossilData[i - 1])));
+
+        diff = std::max(diff, std::fabs(densityFunction(point) - fossilData[i - 1]));
+    }
+    Experement::statisticTable->setItem(1, 8, new QTableWidgetItem(QString::number(diff)));
+}
+
+void Experement::setFunctions()
+{
     double lambda = lambdaLineEdit->text().toDouble();
-    double alpha  = 0.;
+    double alpha = 2.0 * (1. / lambda - 1.);
 
-    alpha = 2.0 * (1. / lambda - 1.);
-
-    auto densityFunction = [&] (double x) -> double {
+    densityFunction = [=] (double x) -> double {
         if (x < alpha)
         {
             return 0;
@@ -358,12 +370,106 @@ void Experement::createDensityTable(const std::vector<double> &points, const QVe
         
     };
 
-    densityTable->setColumnCount(histCount);
+    inversedCumulativeFunction = [=] (double x) -> double {
+        if (!util::belongsTo(x, 0., 1.))
+        {
+            throw 5;
+        }
+
+        if (util::belongsTo(x, 0., -alpha / 2.))
+        {
+            return alpha + sqrt(-2. * alpha * x);
+        } else
+        {
+            return -log(-lambda * (x - 1.)) / lambda;
+        }
+    };
+
+    cumulativeFunction = [=] (double x) -> double {
+        if (x < alpha)
+        {
+            return 0.;
+        }
+        if (util::belongsTo(x, alpha, 0.))
+        {
+            return -(x * x) / (2. * alpha) + x - alpha / 2.;
+        } else
+        {
+            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda;
+        }
+    };
+}
+
+std::vector<double> Experement::getQ()
+{
+    int histCount = Experement::partitionLineEdit->text().toInt();
+
+    std::vector<double> points;
+    for (int i = 0; i < histCount; i++)
+    {
+        points.push_back(Experement::histTable->item(1, i + 1)->text().toDouble());
+    }
+
+    std::vector<double> result;
+
+    result.push_back(cumulativeFunction(points[0]));
+
     for (int i = 1; i < histCount; i++)
     {
-        auto point = (points[i] + points[i - 1]) / 2.;
-        Experement::densityTable->setItem(0, i, new QTableWidgetItem(QString::number(point)));
-        Experement::densityTable->setItem(1, i, new QTableWidgetItem(QString::number(densityFunction(point))));
-        Experement::densityTable->setItem(2, i, new QTableWidgetItem(QString::number(fossilData[i - 1])));
+        result.push_back(cumulativeFunction(points[i]) - cumulativeFunction(points[i - 1]));
+    }
+
+    return result;
+}
+
+double Experement::getR0()
+{
+    int n = countLineEdit->text().toInt();
+    int k = Experement::partitionLineEdit->text().toInt();
+
+    q = getQ();
+
+    double r0 = n * q[0];
+    
+    for (int i = 1; i < k; i++)
+    {
+        r0 += util::sqr(data[i] - n * q[i]) / (n * q[i]);
+    }
+
+    return r0;
+}
+
+double Experement::getF0(double x)
+{
+    double k = Experement::partitionLineEdit->text().toDouble() - 1.;
+    return 1. - boost::math::gamma_p(k / 2, x);
+}
+
+void Experement::checkHypothesis()
+{
+    double fr0 = getF0(getR0());
+    double a   = importanceLineEdit->text().toDouble();
+
+    FR0LineEdit->setText(QString::number(fr0));
+
+    if (fr0 < a)
+    {
+        hypothesisLable->setText("Hypothesis H0 is not confirmed");
+    } else
+    {
+        hypothesisLable->setText("Hypothesis H0 is confirmed");
+    }
+}
+
+void Experement::fillHypothesisTable()
+{
+    int histCount = Experement::partitionLineEdit->text().toInt();
+
+    auto q = getQ();
+
+    for (int i = 0; i < histCount; i++)
+    {
+        hypothesisTable->setItem(0, i, new QTableWidgetItem(QString::number(i + 1)));
+        hypothesisTable->setItem(1, i, new QTableWidgetItem(QString::number(q[i])));
     }
 }

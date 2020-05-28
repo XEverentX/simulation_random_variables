@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     
   Experement window;
  
-  window.resize(1280, 900);
+  window.resize(1280, 720);
   window.setWindowTitle("Experement");
   window.show();
  
