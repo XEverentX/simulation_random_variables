@@ -24,13 +24,16 @@ Experement::Experement(QWidget *parent)
  
     lambdaLineEdit = new QLineEdit("4", this);
     countLineEdit  = new QLineEdit("10000", this);
+    partitionLineEdit = new QLineEdit("30", this);
+    importanceLineEdit = new QLineEdit("1", this);
 
     lambdaLable = new QLabel("lambda: ", this);
     countLable  = new QLabel("count: ", this);
-    auto histLable = new QLabel("Histogram init:", this);
+    auto partitionLabel = new QLabel("Partition count:", this);
+    auto importanceLabel = new QLabel("Importance level:", this);
 
     lambdaLable->setMaximumHeight(12);
-    histLable->setMaximumHeight(12);
+    partitionLabel->setMaximumHeight(12);
  
     runButton = new QPushButton("Run", this);
     auto plotButton = new QPushButton("Replot Hist", this);
@@ -49,8 +52,8 @@ Experement::Experement(QWidget *parent)
     histTable->horizontalHeader()->hide();
     densityTable->horizontalHeader()->hide();
 
-    histTable->setItem(0, 0, new QTableWidgetItem("Count / Values"));
-    histTable->setItem(1, 0, new QTableWidgetItem("30"));
+    histTable->setItem(0, 0, new QTableWidgetItem("№"));
+    histTable->setItem(1, 0, new QTableWidgetItem("Value"));
     
     densityTable->setItem(0, 0, new QTableWidgetItem("x[i]"));
     densityTable->setItem(1, 0, new QTableWidgetItem("f(x[i])"));
@@ -90,7 +93,10 @@ Experement::Experement(QWidget *parent)
 
     layout->addWidget(tabs);
 
-    histLayout->addWidget(histLable);
+    histLayout->addWidget(partitionLabel);
+    histLayout->addWidget(partitionLineEdit);
+    histLayout->addWidget(importanceLabel);
+    histLayout->addWidget(importanceLineEdit);
     histLayout->addWidget(plotButton);
 
     layout->addLayout(histLayout);
@@ -146,34 +152,7 @@ void Experement::run()
 
     alpha = 2.0 * (1. / lambda - 1.);
 
-    auto inversedCumulativeFunction = [=] (double x) -> double {
-        if (!util::belongsTo(x, 0., 1.))
-        {
-            throw 5;
-        }
-
-        if (util::belongsTo(x, 0., -alpha / 2.))
-        {
-            return alpha + sqrt(-2. * alpha * x);
-        } else
-        {
-            return -log(-lambda * (x - 1.)) / lambda;
-        }
-    };
-
-    auto cumulativeFunction = [=] (double x) -> double {
-        if (x < alpha)
-        {
-            return 0.;
-        }
-        if (util::belongsTo(x, alpha, 0.))
-        {
-            return -(x * x) / (2. * alpha) + x - alpha / 2.;
-        } else
-        {
-            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda;
-        }
-    };
+    setFunctions();
 
     Distribution distribution;
     distribution.setInversedCumulativeFunction(inversedCumulativeFunction);
@@ -228,7 +207,7 @@ void Experement::run()
 
     customPlot->replot();
 
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    int histCount = Experement::partitionLineEdit->text().toInt();
 
     segmentLen = statistic.getHistSegmentsLen(histCount);
     for (int i = 0; i < histCount; i++)
@@ -257,7 +236,7 @@ void Experement::run()
 
 void Experement::plotHist()
 {
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
+    int histCount = Experement::partitionLineEdit->text().toInt();
 
     std::vector<double> points;
     for (int i = 0; i < histCount; i++)
@@ -335,26 +314,7 @@ void Experement::plotHist()
 
 void Experement::createDensityTable(const std::vector<double> &points, const QVector<double> &fossilData)
 {
-    int histCount = Experement::histTable->item(1, 0)->text().toInt();
-    double lambda = lambdaLineEdit->text().toDouble();
-    double alpha  = 0.;
-
-    alpha = 2.0 * (1. / lambda - 1.);
-
-    auto densityFunction = [&] (double x) -> double {
-        if (x < alpha)
-        {
-            return 0;
-        }
-        if (util::belongsTo(x, alpha, 0.))
-        {
-            return 1. - x / alpha;
-        } else
-        {
-            return exp(-lambda * x);
-        }
-        
-    };
+    int histCount = Experement::partitionLineEdit->text().toInt();
 
     double diff = 0.;
 
@@ -369,4 +329,54 @@ void Experement::createDensityTable(const std::vector<double> &points, const QVe
         diff = std::max(diff, std::fabs(densityFunction(point) - fossilData[i - 1]));
     }
     Experement::statisticTable->setItem(1, 8, new QTableWidgetItem(QString::number(diff)));
+}
+
+void Experement::setFunctions()
+{
+    double lambda = lambdaLineEdit->text().toDouble();
+    double alpha = 2.0 * (1. / lambda - 1.);
+
+    densityFunction = [&] (double x) -> double {
+        if (x < alpha)
+        {
+            return 0;
+        }
+        if (util::belongsTo(x, alpha, 0.))
+        {
+            return 1. - x / alpha;
+        } else
+        {
+            return exp(-lambda * x);
+        }
+        
+    };
+
+    inversedCumulativeFunction = [=] (double x) -> double {
+        if (!util::belongsTo(x, 0., 1.))
+        {
+            throw 5;
+        }
+
+        if (util::belongsTo(x, 0., -alpha / 2.))
+        {
+            return alpha + sqrt(-2. * alpha * x);
+        } else
+        {
+            return -log(-lambda * (x - 1.)) / lambda;
+        }
+    };
+
+    cumulativeFunction = [=] (double x) -> double {
+        if (x < alpha)
+        {
+            return 0.;
+        }
+        if (util::belongsTo(x, alpha, 0.))
+        {
+            return -(x * x) / (2. * alpha) + x - alpha / 2.;
+        } else
+        {
+            return -alpha / 2. - (exp(-lambda * x) - 1.) / lambda;
+        }
+    };
 }

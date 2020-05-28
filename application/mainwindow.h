@@ -1,6 +1,8 @@
 // Copyright Lebedev Alexander 2020
 #pragma once
- 
+
+#include <functional>
+
 #include <QWidget>
 #include <QTableWidget>
 #include <QPushButton>
@@ -22,9 +24,13 @@ public:
 
     void createDensityTable(const std::vector<double> &points, const QVector<double> &fossilData);
 
+    void setFunctions();
+
 private:
     QLineEdit *lambdaLineEdit;
     QLineEdit *countLineEdit;
+    QLineEdit *partitionLineEdit;
+    QLineEdit *importanceLineEdit;
 
     QLabel *lambdaLable;
     QLabel *countLable;
@@ -40,4 +46,8 @@ private:
     QCustomPlot *histPlot;
 
     double segmentLen;
+
+    std::function<double(double)> inversedCumulativeFunction;
+    std::function<double(double)> cumulativeFunction;
+    std::function<double(double)> densityFunction;
 };
