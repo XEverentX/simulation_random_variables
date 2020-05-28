@@ -2,6 +2,7 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 #include <QWidget>
 #include <QTableWidget>
@@ -26,14 +27,27 @@ public:
 
     void setFunctions();
 
+    std::vector<double> getQ();
+    
+    double getR0();
+
+    double getF0(double x);
+
+    void checkHypothesis();
+
+    void fillHypothesisTable();
+
 private:
     QLineEdit *lambdaLineEdit;
     QLineEdit *countLineEdit;
     QLineEdit *partitionLineEdit;
     QLineEdit *importanceLineEdit;
+    QLineEdit *FR0LineEdit;
+
 
     QLabel *lambdaLable;
     QLabel *countLable;
+    QLabel *hypothesisLable;
 
     QPushButton *runButton;
 
@@ -41,11 +55,14 @@ private:
     QTableWidget *statisticTable;
     QTableWidget *histTable;
     QTableWidget *densityTable;
+    QTableWidget *hypothesisTable;
 
     QCustomPlot *customPlot;
     QCustomPlot *histPlot;
 
     double segmentLen;
+    std::vector<double> q;
+    std::vector<int> data;
 
     std::function<double(double)> inversedCumulativeFunction;
     std::function<double(double)> cumulativeFunction;
