@@ -3,6 +3,22 @@
 # Simulation of random variables
 Laboratory work for Theory of probability. Simulation of random variables by given distribution density.
 
+### Setup
+To work with this repo you need to install:
+ - CMake
+ - g++(Linux) or vsc(Windows)
+ - QT
+ - Boost library
+ 
+To setup it on linux use:
+```bash
+ sudo apt install g++
+ sudo apt install cmake
+ sudo apt update
+ sudo apt install qt5-default
+ sudo apt-get install libboost-all-dev
+```
+
 ### Build & Run
 To build application simply follow a few steps:
 
